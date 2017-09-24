@@ -1,0 +1,78 @@
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+using namespace cv;
+using namespace std;
+
+#include <stdio.h>
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <stdlib.h>
+#include <time.h>
+
+Mat frame;
+Mat imageGray;
+Mat imageThresholdSimple;
+
+int umbral = 100;
+int bloques = 45;
+
+void on_trackbar(int, void*) {
+	if (bloques <= 1) {
+		bloques = 3;
+	} else {
+		if (bloques % 2 != 1) {
+			bloques += 1;
+		}
+	}
+}
+
+int main(int argc, const char** argv) {
+	// CvCapture* captura = cvCaptureFromCAM(0);
+	cv::VideoCapture captura = cv::VideoCapture();
+	captura.open(1);
+	captura.read(frame);
+	//CvCapture* captura = cvCaptureFromAVI(
+	//		"datos/videos/MOV_0275.avi");
+	/*CvCapture* captura = cvCaptureFromAVI(
+	 "/home/rey/Vídeos/2014-09-01-093421.avi");*/
+	bool firstFrame = true;
+	int i = 0;
+
+	/*int ext = static_cast<int>(captura.get(CV_CAP_PROP_FOURCC));
+	 Size S = Size((int) captura.get(CV_CAP_PROP_FRAME_WIDTH),
+	 (int) captura.get(CV_CAP_PROP_FRAME_HEIGHT));
+	 cv::VideoWriter writer = cv::VideoWriter();
+	 writer.open("datos/Captura1.avi", ext = -1, captura.get(CV_CAP_PROP_FPS), S,
+	 true);*/
+
+	do {
+		std::stringstream ss;
+		captura.read(frame);
+		imshow("Image", frame);
+		if (firstFrame) {
+			//imshow("Image", frame);
+			createTrackbar("Umbral", "Image", &umbral, 255, on_trackbar);
+			firstFrame = false;
+		}
+		ss << "Images/" << i++ << ".png";
+
+		cvtColor(frame, imageGray, CV_BGR2GRAY);
+		imshow("imageGray", imageGray);
+		threshold(imageGray, imageThresholdSimple, umbral, 255, 1);
+		//imwrite(ss.str(), imageThresholdSimple);
+		imshow("imageThresholdSimple", imageThresholdSimple);
+		if ((waitKey(1) & 255) == 27)
+			break;
+	} while (true);
+
+	//waitKey(0);
+
+	frame.release();
+	imageGray.release();
+	imageThresholdSimple.release();
+	captura.release();
+}
