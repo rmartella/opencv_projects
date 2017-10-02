@@ -54,22 +54,6 @@ void on_mouse(int event, int x, int y, int flags, void* param) {
 		ymax = y;
 		cropping = false, getRoi = true;
 	}
-
-	/*if (event == CV_EVENT_FLAG_LBUTTON && !pressed) {
-	 pressed = true;
-	 regionOfInters = false;
-	 xmin = x;
-	 ymin = y;
-	 std::cout << "xmin:" << xmin << std::endl;
-	 std::cout << "ymin:" << ymin << std::endl;
-	 } else if (event == CV_EVENT_FLAG_LBUTTON && pressed) {
-	 pressed = false;
-	 regionOfInters = true;
-	 xmax = x;
-	 ymax = y;
-	 std::cout << "xmax:" << xmax << std::endl;
-	 std::cout << "ymax:" << ymax << std::endl;
-	 }*/
 }
 
 void calculaCentroide(cv::Mat mask, cv::Mat imagenSegmentada) {
@@ -190,42 +174,64 @@ int main(int argc, char** argv) {
 		std::vector<cv::Vec4i> hierarchy;
 		cv::Mat canny_output;
 		mask.copyTo(canny_output);
-		cv::findContours(canny_output, contours, CV_RETR_TREE,
+		//cv::Canny(canny_output, canny_output, 200, 200 * 2, 3);
+		cv::imshow("Canny", canny_output);
+		cv::findContours(canny_output, contours, hierarchy, CV_RETR_TREE,
 				CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-		int indexContourMax = 0;
-		int maxPixels = 0;
-		// vector<Point> contornoMaximo;
-		// vector<Moments> mu(contours.size());
-		for (unsigned int i = 0; i < contours.size(); i++) {
-			if (contours[i].size() > maxPixels) {
-				maxPixels = contours[i].size();
-				indexContourMax = i;
-			}
-		}
+		/*if (contours.size() > 0) {
+		 int idx = 0;
+		 for (; idx >= 0; idx = hierarchy[idx][0]) {
+		 cv::Scalar color(rand() & 255, rand() & 255, rand() & 255);
+		 cv::drawContours(maskedImage, contours, idx, color, CV_FILLED,
+		 8, hierarchy);
+		 }
+		 }*/
+		/*int indexContourMax = 0;
+		 int maxPixels = 0;
+		 for (unsigned int i = 0; i < contours.size(); i++) {
+		 if (contours[i].size() > maxPixels) {
+		 maxPixels = contours[i].size();
+		 indexContourMax = i;
+		 }
+		 }
+		 if (contours.size() > 0) {
+		 std::vector<cv::Point> contour_poly;
+		 cv::approxPolyDP(cv::Mat(contours[indexContourMax]), contour_poly,
+		 3, true);
+		 cv::boundingRect(contour_poly);
+		 cv::rectangle(maskedImage, cv::boundingRect(contour_poly).tl(),
+		 cv::boundingRect(contour_poly).br(), CV_RGB(124, 40, 30), 2,
+		 8, 0);
+		 cv::Moments centroide = moments(contours[indexContourMax], false);
+		 cv::Point punto(centroide.m10 / centroide.m00,
+		 centroide.m01 / centroide.m00);
+		 cv::circle(maskedImage, punto, 4, CV_RGB(124, 40, 30), -1, 8, 0);
+		 std::cout << cv::Mat(punto) << std::endl;
+		 }*/
+
 		if (contours.size() > 0) {
-			/*std::vector<cv::Point> contour_poly(contours[indexContourMax].size());
-			 cv::approxPolyDP(cv::Mat(contours[indexContourMax]), contour_poly, 3,
-			 true);
-			 cv::boundingRect(contour_poly);
-			 cv::rectangle(maskedImage, cv::boundingRect(contour_poly).tl(),
-			 cv::boundingRect(contour_poly).br(), CV_RGB(124, 40, 30), 2,
-			 8, 0);
-			 cv::Moments centroide = moments(contours[indexContourMax], false);
-			 cv::Point punto(centroide.m10 / centroide.m00,
-			 centroide.m01 / centroide.m00);
-			 cv::circle(maskedImage, punto, 4, CV_RGB(124, 40, 30), -1, 8, 0);*/
+			double maxArea = -1;
+			int indexMaxArea = 0;
+			for (unsigned int i = 0; i < contours.size(); i++) {
+				float area = cv::contourArea(contours[i]);
+				if (area > maxArea) {
+					maxArea = area;
+					indexMaxArea = i;
+				}
+			}
 			std::vector<cv::Point> contour_poly;
-			cv::approxPolyDP(cv::Mat(contours[indexContourMax]), contour_poly,
-					3, true);
+			cv::approxPolyDP(cv::Mat(contours[indexMaxArea]), contour_poly, 3,
+					true);
 			cv::boundingRect(contour_poly);
 			cv::rectangle(maskedImage, cv::boundingRect(contour_poly).tl(),
 					cv::boundingRect(contour_poly).br(), CV_RGB(124, 40, 30), 2,
 					8, 0);
-			cv::Moments centroide = moments(contours[indexContourMax], false);
+			cv::Moments centroide = moments(contours[indexMaxArea], false);
 			cv::Point punto(centroide.m10 / centroide.m00,
 					centroide.m01 / centroide.m00);
 			cv::circle(maskedImage, punto, 4, CV_RGB(124, 40, 30), -1, 8, 0);
 			std::cout << cv::Mat(punto) << std::endl;
+
 		}
 
 		imshow("Color mask", mask);
